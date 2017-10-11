@@ -9,8 +9,17 @@ module.exports = appInfo => {
   // add your config here
   config.middleware = [];
 
+  config.logger = {
+    consoleLevel: 'DEBUG',
+  };
+
   config.io = {
-    init: {},
+    namespace: {
+      '/kd': {
+        connectionMiddleware: [],
+        packetMiddleware: [],
+      },
+    },
   };
 
   return config;

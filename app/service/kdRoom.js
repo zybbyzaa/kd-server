@@ -1,11 +1,13 @@
 'use strict';
+const path = require('path');
+const fs = require('fs');
 const axios = require('axios');
 let lastTime = 0;
 
 module.exports = app => {
   class KdRoom extends app.Service {
     * getKdRoomMsg() {
-      yield axios({
+      const msg = yield axios({
         method: 'post',
         url:
           'https://pjuju.48.cn/imsystem/api/im/v1/member/room/message/mainpage',
@@ -32,22 +34,81 @@ module.exports = app => {
                 const extInfo = JSON.parse(msg.extInfo);
                 const msgType = extInfo.messageObject;
                 if (msgType === 'text') {
-                  return msg.bodys;
+                  return {
+                    msgTime: msg.msgTime,
+                    msgText: msg.bodys,
+                  };
                 } else if (msgType === 'image') {
-                  return JSON.parse(msg.bodys).url;
+                  return {
+                    msgTime: msg.msgTime,
+                    msgText: JSON.parse(msg.bodys).url,
+                  };
+                } else if (msgType === 'videoRecord') {
+                  return {
+                    msgTime: msg.msgTime,
+                    msgText: JSON.parse(msg.bodys).url,
+                  };
                 } else if (msgType === 'live') {
-                  return `https://h5.48.cn/2017appshare/memberLiveShare/index.html?id=${extInfo.referenceObjectId}`;
+                  return {
+                    msgTime: msg.msgTime,
+                    msgText: `https://h5.48.cn/2017appshare/memberLiveShare/index.html?id=${extInfo.referenceObjectId}`,
+                  };
                 } else if (msgType === 'diantai') {
-                  return `https://h5.48.cn/2017appshare/memberLiveShare/index.html?id=${extInfo.referenceObjectId}`;
+                  return {
+                    msgTime: msg.msgTime,
+                    msgText: `https://h5.48.cn/2017appshare/memberLiveShare/index.html?id=${extInfo.referenceObjectId}`,
+                  };
                 }
-                return `信息类型未知:${msgType}`;
+                this.ctx.logger.debug(msg);
+                return {
+                  msgTime: msg.msgTime,
+                  msgText: `信息类型未知:${msgType}`,
+                };
               });
-            console.log(msgContent);
+            return msgContent;
           }
         })
         .catch(err => {
-          console.log(err);
+          this.ctx.logger.error(err);
         });
+      const dataMsg = [];
+      let localMsgData = [];
+      const jsonPath = path.resolve(
+        __dirname,
+        '..',
+        'public/localMsgData.json'
+      );
+      this.ctx.logger.debug('文件路径', jsonPath);
+      if (fs.existsSync(jsonPath)) {
+        const content = fs.readFileSync(jsonPath, 'utf-8');
+        localMsgData = JSON.parse(content);
+        const localFirstMsgTime =
+          (localMsgData[0] && localMsgData[0].msgTime) || 0;
+        const newMsg = msg.filter(msg => {
+          return msg.msgTime > localFirstMsgTime;
+        });
+        dataMsg.push(...newMsg);
+        dataMsg.push(...localMsgData);
+      } else {
+        dataMsg.push(...msg);
+      }
+      if (dataMsg.length !== localMsgData.length) {
+        const jsonStr = JSON.stringify(dataMsg);
+        this.ctx.logger.debug('写入新数据');
+        fs.writeFileSync(jsonPath, jsonStr);
+      }
+    }
+    * getLocalMsg(lastTime) {
+      const jsonPath = path.resolve(
+        __dirname,
+        '..',
+        'public/localMsgData.json'
+      );
+      const content = fs.readFileSync(jsonPath, 'utf-8');
+      const localMsgData = JSON.parse(content).filter(msg => {
+        return msg.msgTime > lastTime;
+      });
+      this.ctx.logger.debug(localMsgData);
     }
   }
   return KdRoom;

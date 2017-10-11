@@ -2,6 +2,7 @@
 
 exports.schedule = {
   type: 'worker',
+  immediate: true,
   cron: '*/1 10-23 * * *',
 };
 
