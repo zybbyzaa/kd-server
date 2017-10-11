@@ -1,5 +1,6 @@
 'use strict';
 const axios = require('axios');
+let lastTime = 0;
 
 module.exports = app => {
   class KdRoom extends app.Service {
@@ -22,23 +23,24 @@ module.exports = app => {
         .then(res => {
           if (res.status === 200) {
             const msgList = res.data.content.data;
-            let lastTime = this.ctx.session.lastTime;
-            if (!lastTime && msgList[0]) {
-              // lastTime = msgList[0].msgTime;
-              // this.ctx.session.lastTime = lastTime;
-              lastTime = 0;
-            }
             const msgContent = msgList
               .filter(msg => {
                 return msg.msgTime > lastTime;
               })
               .map(msg => {
-                if (typeof msg.bodys === 'object') {
-                  return msg.bodys.url;
-                } else if (typeof msg.bodys === 'string' && msg.bodys) {
+                lastTime = msg.msgTime > lastTime ? msg.msgTime : lastTime;
+                const extInfo = JSON.parse(msg.extInfo);
+                const msgType = extInfo.messageObject;
+                if (msgType === 'text') {
                   return msg.bodys;
+                } else if (msgType === 'image') {
+                  return JSON.parse(msg.bodys).url;
+                } else if (msgType === 'live') {
+                  return `https://h5.48.cn/2017appshare/memberLiveShare/index.html?id=${extInfo.referenceObjectId}`;
+                } else if (msgType === 'diantai') {
+                  return `https://h5.48.cn/2017appshare/memberLiveShare/index.html?id=${extInfo.referenceObjectId}`;
                 }
-                return `${msg.extInfo.msgText}->${msg.extInfo.faipaiContent}`;
+                return `信息类型未知:${msgType}`;
               });
             console.log(msgContent);
           }
