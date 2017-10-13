@@ -6,20 +6,20 @@ let lastTime = 0;
 
 module.exports = app => {
   class KdRoom extends app.Service {
-    * getKdRoomMsg() {
-      const msg = yield axios({
+    async getKdRoomMsg() {
+      const { roomId, token } = app.config.kd;
+      const msg = await axios({
         method: 'post',
         url:
           'https://pjuju.48.cn/imsystem/api/im/v1/member/room/message/mainpage',
         data: {
-          roomId: 5773822,
+          roomId,
           chatType: 0,
           lastTime: 0,
           limit: 10,
         },
         headers: {
-          token:
-            'tHZW68d3JYxdtaDDd8Qab+2T2HFPllBMoqDdPoimTCHCwzMhZ2n+7fgGsUtevP/gOY4eAF9ifbM=',
+          token,
         },
       })
         .then(res => {
@@ -33,37 +33,51 @@ module.exports = app => {
                 lastTime = msg.msgTime > lastTime ? msg.msgTime : lastTime;
                 const extInfo = JSON.parse(msg.extInfo);
                 const msgType = extInfo.messageObject;
+                let msgInfo = {
+                  msgTime: msg.msgTime,
+                  msgType,
+                  msgText: `信息类型未知:${msgType}`,
+                };
                 if (msgType === 'text') {
-                  return {
+                  msgInfo = {
                     msgTime: msg.msgTime,
+                    msgType,
                     msgText: msg.bodys,
                   };
                 } else if (msgType === 'image') {
-                  return {
+                  msgInfo = {
                     msgTime: msg.msgTime,
+                    msgType,
                     msgText: JSON.parse(msg.bodys).url,
                   };
                 } else if (msgType === 'videoRecord') {
-                  return {
+                  msgInfo = {
                     msgTime: msg.msgTime,
+                    msgType,
                     msgText: JSON.parse(msg.bodys).url,
                   };
                 } else if (msgType === 'live') {
-                  return {
+                  msgInfo = {
                     msgTime: msg.msgTime,
+                    msgType,
                     msgText: `https://h5.48.cn/2017appshare/memberLiveShare/index.html?id=${extInfo.referenceObjectId}`,
                   };
                 } else if (msgType === 'diantai') {
-                  return {
+                  msgInfo = {
                     msgTime: msg.msgTime,
+                    msgType,
                     msgText: `https://h5.48.cn/2017appshare/memberLiveShare/index.html?id=${extInfo.referenceObjectId}`,
                   };
+                } else if (msgType === 'faipaiText') {
+                  msgInfo = {
+                    msgTime: msg.msgTime,
+                    msgType,
+                    msgText: `${extInfo.faipaiContent}=>${extInfo.messageText}`,
+                  };
+                } else {
+                  this.ctx.logger.debug(msg);
                 }
-                this.ctx.logger.debug(msg);
-                return {
-                  msgTime: msg.msgTime,
-                  msgText: `信息类型未知:${msgType}`,
-                };
+                return msgInfo;
               });
             return msgContent;
           }
@@ -87,7 +101,10 @@ module.exports = app => {
         const newMsg = msg.filter(msg => {
           return msg.msgTime > localFirstMsgTime;
         });
-        dataMsg.push(...newMsg);
+        if (newMsg.length > 0) {
+          dataMsg.push(...newMsg);
+          app.io.of('/kd').emit('res', newMsg);
+        }
         dataMsg.push(...localMsgData);
       } else {
         dataMsg.push(...msg);
@@ -98,7 +115,7 @@ module.exports = app => {
         fs.writeFileSync(jsonPath, jsonStr);
       }
     }
-    * getLocalMsg(lastTime) {
+    async getLocalMsg(lastTime) {
       const jsonPath = path.resolve(
         __dirname,
         '..',
@@ -108,7 +125,7 @@ module.exports = app => {
       const localMsgData = JSON.parse(content).filter(msg => {
         return msg.msgTime > lastTime;
       });
-      this.ctx.logger.debug(localMsgData);
+      return lastTime > 0 ? localMsgData : localMsgData.slice(0, 5);
     }
   }
   return KdRoom;

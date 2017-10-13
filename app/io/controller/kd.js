@@ -1,10 +1,10 @@
 'use strict';
 
 module.exports = () => {
-  return function* () {
+  return async function() {
     const lastTime = this.args[0];
-    console.log('chat :', lastTime + ' : ' + process.pid);
-    const msg = yield this.service.kdRoom.getLocalMsg(lastTime);
+    // this.ctx.logger.info(`LastTime:${lastTime}`);
+    const msg = await this.service.kdRoom.getLocalMsg(lastTime);
     this.socket.emit('res', msg);
   };
 };

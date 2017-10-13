@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>口袋房间提醒</title>
+</head>
+<body>
+  <p><%= welcomeText %></p>
+  <script src="/public/js/socket.io.js"></script>
+  <script>
+    var socket = io('http://127.0.0.1:7001/kd');
+    var lastTime = localStorage.getItem('lastTime') || 0;
+    var popNotice = function(msg) {
+        if (Notification.permission == "granted") {
+            var notification = new Notification("Hi，帅哥：", {
+                body: msg.msgText,
+                icon: 'http://image.zhangxinxu.com/image/study/s/s128/mm1.jpg'
+            });
+            notification.onclick = function(msg) {
+                notification.close();    
+            };
+        }    
+    };
+    socket.on('connect', function(){
+      console.log('连接成功');
+      socket.emit('kd', lastTime);
+    });
+    socket.on('res', msgs => {
+      localStorage.setItem('lastTime', msgs[0].msgTime)
+      msgs.reverse().forEach(msg => {
+        console.log('get new msg: %s!', msg.msgText);
+        if (Notification.permission == "granted") {
+          popNotice(msg);
+        } else if (Notification.permission != "denied") {
+          Notification.requestPermission(function (permission) {
+            popNotice(msg);
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>

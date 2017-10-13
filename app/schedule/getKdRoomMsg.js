@@ -6,7 +6,7 @@ exports.schedule = {
   cron: '*/1 10-23 * * *',
 };
 
-exports.task = function* (ctx) {
+exports.task = async function(ctx) {
   console.log(new Date());
-  yield ctx.service.kdRoom.getKdRoomMsg();
+  await ctx.service.kdRoom.getKdRoomMsg();
 };
