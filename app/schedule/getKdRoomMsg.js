@@ -3,7 +3,7 @@
 exports.schedule = {
   type: 'worker',
   immediate: true,
-  cron: '*/1 10-23 * * *',
+  cron: '*/1 0,10-23 * * *',
 };
 
 exports.task = async function(ctx) {

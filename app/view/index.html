@@ -5,20 +5,83 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>口袋房间提醒</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.css">
+  <script>(function(c,g){var u=c.document;var b=u.documentElement;var n=u.querySelector('meta[name="viewport"]');var p=u.querySelector('meta[name="flexible"]');var a=0;var t=0;var m;var e=g.flexible||(g.flexible={});if(n){console.warn("将根据已有的meta标签来设置缩放比例");var f=n.getAttribute("content").match(/initial\-scale=([\d\.]+)/);if(f){t=parseFloat(f[1]);a=parseInt(1/t)}}else{if(p){var k=p.getAttribute("content");if(k){var s=k.match(/initial\-dpr=([\d\.]+)/);var i=k.match(/maximum\-dpr=([\d\.]+)/);if(s){a=parseFloat(s[1]);t=parseFloat((1/a).toFixed(2))}if(i){a=parseFloat(i[1]);t=parseFloat((1/a).toFixed(2))}}}}if(!a&&!t){var r=c.navigator.appVersion.match(/android/gi);var q=c.navigator.appVersion.match(/iphone/gi);var o=c.navigator.appVersion.match(/ipad/gi);var l=c.devicePixelRatio;if(q){if(l>=3&&(!a||a>=3)){a=3}else{if(l>=2&&(!a||a>=2)){a=2}else{a=1}}}else{a=1}t=1/a}b.setAttribute("data-dpr",a);if(!n){n=u.createElement("meta");n.setAttribute("name","viewport");n.setAttribute("content","initial-scale="+t+", maximum-scale="+t+", minimum-scale="+t+", user-scalable=no");if(b.firstElementChild){b.firstElementChild.appendChild(n)}else{var h=u.createElement("div");h.appendChild(n);u.write(h.innerHTML)}}function d(){var w=navigator.userAgent;var z=new Array("Android","iPhone","SymbianOS","Windows Phone","iPad","iPod");var x=true;for(var y=0;y<z.length;y++){if(w.indexOf(z[y])>0){x=false;break}}return x}function j(){var v=b.getBoundingClientRect().width;if(d()&&v<2047){v=v>540?540:v}var w=v/7.5;b.style.fontSize=w+"px";e.rem=c.rem=w}c.addEventListener("resize",function(){clearTimeout(m);m=setTimeout(j,300)},false);c.addEventListener("pageshow",function(v){if(v.persisted){clearTimeout(m);m=setTimeout(j,300)}},false);if(u.readyState==="complete"){u.body.style.fontSize=14*a+"px"}else{u.addEventListener("DOMContentLoaded",function(v){u.body.style.fontSize=14*a+"px"},false)}j();e.dpr=c.dpr=a;e.refreshRem=j;e.rem2px=function(w){var v=parseFloat(w)*this.rem;if(typeof w==="string"&&w.match(/rem$/)){v+="px"}return v};e.px2rem=function(w){var v=parseFloat(w)/this.rem;if(typeof w==="string"&&w.match(/px$/)){v+="rem"}return v}})(window,window["lib"]||(window["lib"]={}));</script>
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+    }
+    .app-wrap {
+      width: 100%;
+      height: 100%;
+      background: url('/public/images/bg.jpg') no-repeat center;
+      background-size: 100% 100%;
+      overflow: auto;
+    }
+    .welcome-tip {
+      font-size: 0.14rem;
+      line-height: 2;
+      padding: 0 .24rem;
+      background-color: rgba(255, 255, 255, 0.7);
+      margin: 0;
+    }
+    .msg-list {
+      padding: 0 .24rem;
+    }
+    .msg-item {
+      display: flex;
+      align-items: center;
+    }
+    .msg-avatar {
+      width: .84rem;
+      height: .84rem;
+    }
+    .msg-content {
+      margin-left: .24rem;
+      flex: 1;
+      border-radius: .2rem;
+      border: 1px solid #000;
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: .24rem;
+    }
+  </style>
 </head>
 <body>
-  <p><%= welcomeText %></p>
+  <div class="app-wrap">
+    <p class="welcome-tip"><%= welcomeText %></p> 
+    <ul class="msg-list">
+    </ul>
+  </div>
   <script src="/public/js/socket.io.js"></script>
+  <script src="/public/js/template-web.js"></script>
+  <script id="msg-list" type="text/html">
+    {{each $data}}
+      <li class="msg-item">
+        <img src="/public/images/avatar.jpg" alt="" class="msg-avatar">
+        <p class="msg-content">{{$value.msgText}}</p>
+      </li>
+    {{/each}}
+  </script>
   <script>
     var socket = io('http://127.0.0.1:7001/kd');
     var lastTime = localStorage.getItem('lastTime') || 0;
+    var msgData = [];
     var popNotice = function(msg) {
         if (Notification.permission == "granted") {
-            var notification = new Notification("Hi，帅哥：", {
+            var notification = new Notification("小蚯蚓的房间消息：", {
+                renotify: false,
                 body: msg.msgText,
-                icon: 'http://image.zhangxinxu.com/image/study/s/s128/mm1.jpg'
+                icon: '/public/images/avatar.jpg'
             });
             notification.onclick = function(msg) {
+                switch (true) {
+                  case ['image', 'videoRecord', 'live', 'diantai'].indexOf(msg.msgType) >= 0:
+                    window.open(msg.msgText, '_blank');
+                    break;        
+                  default:
+                    break;
+                }
                 notification.close();    
             };
         }    
@@ -28,7 +91,13 @@
       socket.emit('kd', lastTime);
     });
     socket.on('res', msgs => {
-      localStorage.setItem('lastTime', msgs[0].msgTime)
+      if (msgs.length > 0) {
+        localStorage.setItem('lastTime', msgs[0].msgTime);
+      }
+      msgData.push(...msgs.reverse());
+      var html = template('msg-list', msgData);
+      var msgDom = document.getElementsByClassName('msg-list');
+      msgDom[0].innerHTML = html;
       msgs.reverse().forEach(msg => {
         console.log('get new msg: %s!', msg.msgText);
         if (Notification.permission == "granted") {
