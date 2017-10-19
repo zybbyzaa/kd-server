@@ -72,7 +72,8 @@ module.exports = app => {
                   msgInfo = {
                     msgTime: msg.msgTime,
                     msgType,
-                    msgText: `${extInfo.faipaiContent}=>${extInfo.messageText}`,
+                    msgText: extInfo.messageText,
+                    faiPaiText: extInfo.faipaiContent,
                   };
                 } else {
                   this.ctx.logger.debug(msg);
@@ -92,7 +93,6 @@ module.exports = app => {
         '..',
         'public/localMsgData.json'
       );
-      this.ctx.logger.debug('文件路径', jsonPath);
       if (fs.existsSync(jsonPath)) {
         const content = fs.readFileSync(jsonPath, 'utf-8');
         localMsgData = JSON.parse(content);
@@ -125,7 +125,7 @@ module.exports = app => {
       const localMsgData = JSON.parse(content).filter(msg => {
         return msg.msgTime > lastTime;
       });
-      return lastTime > 0 ? localMsgData : localMsgData.slice(0, 5);
+      return localMsgData.slice(0, 5);
     }
   }
   return KdRoom;

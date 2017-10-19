@@ -69,12 +69,35 @@
     var msgData = [];
     var popNotice = function(msg) {
         if (Notification.permission == "granted") {
+            var msgText = '';
+            switch (mgs.msgType) {
+              case 'image':
+                msgText = '你有一条图片消息';
+                break;
+              case 'live':
+                msgText = '你有一条直播消息';
+                break;
+              case 'diantai':
+                msgText = '你有一条电台消息';
+                break;
+              case 'videoRecord':
+                msgText = '你有一条视频消息';
+                break;
+              case 'text':
+              case 'faipaiText':
+                msgText = '你有一条文本消息';
+                break;
+              default:
+                msgText = '你有一条未知类型消息';
+                break;
+            }
             var notification = new Notification("小蚯蚓的房间消息：", {
                 renotify: false,
-                body: msg.msgText,
+                body: msgText,
                 icon: '/public/images/avatar.jpg'
             });
             notification.onclick = function(msg) {
+                window.focus();
                 switch (true) {
                   case ['image', 'videoRecord', 'live', 'diantai'].indexOf(msg.msgType) >= 0:
                     window.open(msg.msgText, '_blank');
