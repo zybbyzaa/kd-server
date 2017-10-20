@@ -153,7 +153,19 @@
       console.log('连接成功');
       socket.emit('kd', lastTime);
     });
-    socket.on('res', msgs => {
+    socket.on('lastestMsg', msgs => {
+      if (msgs.length > 0) {
+        localStorage.setItem('lastTime', msgs[0].msgTime);
+      }
+      msgData.push(...msgs.reverse());
+      var html = template('msg-list', msgData);
+      var msgDom = document.getElementsByClassName('msg-list');
+      msgDom[0].innerHTML = html;
+      msgs.reverse().forEach(msg => {
+        console.log('get new msg: %s!', msg.msgText);
+      });
+    });
+    socket.on('newMsg', msgs => {
       if (msgs.length > 0) {
         localStorage.setItem('lastTime', msgs[0].msgTime);
       }

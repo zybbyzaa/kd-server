@@ -106,7 +106,7 @@ module.exports = app => {
         });
         if (newMsg.length > 0) {
           dataMsg.push(...newMsg);
-          app.io.of('/kd').emit('res', newMsg);
+          app.io.of('/kd').emit('newMsg', newMsg);
         }
         dataMsg.push(...localMsgData);
       } else {
