@@ -20,7 +20,7 @@
       overflow: auto;
     }
     .welcome-tip {
-      font-size: 0.14rem;
+      font-size: 0.28rem;
       line-height: 2;
       padding: 0 .24rem;
       background-color: rgba(255, 255, 255, 0.7);
@@ -44,6 +44,17 @@
       border: 1px solid #000;
       background-color: rgba(255, 255, 255, 0.9);
       padding: .24rem;
+      line-height: 1.2;
+    }
+    .msg-fanpai {
+      border-top: 1px solid #e5e5e5;
+    }
+    .msg-link {
+      display: block;
+      width: .8rem;
+    }
+    .msg-image {
+      width: .8rem;
     }
   </style>
 </head>
@@ -59,7 +70,36 @@
     {{each $data}}
       <li class="msg-item">
         <img src="/public/images/avatar.jpg" alt="" class="msg-avatar">
-        <p class="msg-content">{{$value.msgText}}</p>
+        {{if $value.msgType === 'text'}}
+        <div class="msg-content">
+          <p>{{$value.msgText}}</p>
+        </div>
+        {{else if $value.msgType === 'faipaiText'}}
+        <div class="msg-content">
+          <p>{{$value.msgText}}</p>
+          <p class="msg-fanpai">{{$value.faiPaiText}}</p>
+        </div>
+        {{else if $value.msgType === 'image'}}
+        <div class="msg-content">
+          <a href="{{$value.msgText}}" class="msg-link" target="_blank">
+            <img src="{{$value.msgText}}" alt="" class="msg-image">
+          </a>
+        </div>
+        {{else if $value.msgType === 'live'}}
+        <div class="msg-content">
+          <a href="{{$value.msgText}}" class="msg-link" target="_blank">
+            <img src="{{$value.coverImage}}" alt="" class="msg-image">
+          </a>
+          小蚯蚓的直播间
+        </div>
+        {{else if $value.msgType === 'diantai'}}
+        <div class="msg-content">
+          <a href="{{$value.msgText}}" class="msg-link" target="_blank">
+            <img src="{{$value.coverImage}}" alt="" class="msg-image">
+          </a>
+          小蚯蚓的电台
+        </div>
+        {{/if}}
       </li>
     {{/each}}
   </script>
@@ -70,7 +110,7 @@
     var popNotice = function(msg) {
         if (Notification.permission == "granted") {
             var msgText = '';
-            switch (mgs.msgType) {
+            switch (msg.msgType) {
               case 'image':
                 msgText = '你有一条图片消息';
                 break;
@@ -105,7 +145,7 @@
                   default:
                     break;
                 }
-                notification.close();    
+                notification.close();
             };
         }    
     };

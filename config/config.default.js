@@ -29,6 +29,7 @@ module.exports = appInfo => {
   };
 
   config.kd = {
+    memberId: 417317,
     roomId: 5773822,
     token:
       'tHZW68d3JYxdtaDDd8Qab+2T2HFPllBMoqDdPoimTCHCwzMhZ2n+7fgGsUtevP/gOY4eAF9ifbM=',

@@ -56,17 +56,20 @@ module.exports = app => {
                     msgType,
                     msgText: JSON.parse(msg.bodys).url,
                   };
+                  this.ctx.logger.info(msg);
                 } else if (msgType === 'live') {
                   msgInfo = {
                     msgTime: msg.msgTime,
                     msgType,
                     msgText: `https://h5.48.cn/2017appshare/memberLiveShare/index.html?id=${extInfo.referenceObjectId}`,
+                    coverImage: extInfo.referencecoverImage,
                   };
                 } else if (msgType === 'diantai') {
                   msgInfo = {
                     msgTime: msg.msgTime,
                     msgType,
                     msgText: `https://h5.48.cn/2017appshare/memberLiveShare/index.html?id=${extInfo.referenceObjectId}`,
+                    coverImage: extInfo.referencecoverImage,
                   };
                 } else if (msgType === 'faipaiText') {
                   msgInfo = {
@@ -76,7 +79,7 @@ module.exports = app => {
                     faiPaiText: extInfo.faipaiContent,
                   };
                 } else {
-                  this.ctx.logger.debug(msg);
+                  this.ctx.logger.info(msg);
                 }
                 return msgInfo;
               });
