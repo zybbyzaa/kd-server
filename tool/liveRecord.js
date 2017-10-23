@@ -2,7 +2,9 @@
 
 const axios = require('axios');
 const memberId = 417317;
-const exec = require('child_process').exec;
+const exec = require('child_process').spawn;
+const fs = require('fs');
+const path = require('path');
 
 axios({
   method: 'POST',
@@ -26,9 +28,13 @@ axios({
   })[0];
   const livePath = (curLive && curLive.streamPath) || '';
   if (livePath) {
-    const liveOutName = `../live/${curLive.subTitle}(${curLive.startTime}).flv`;
-    console.log(`开始录制直播，当前直播地址：${livePath}`);
-    const ffmpeg = exec('ffmpeg.exe', [
+    let liveOutName = path.resolve(`./live/${curLive.subTitle}(${curLive.startTime}).flv`);
+    let i = 1;
+    while (fs.existsSync(liveOutName)) {
+      liveOutName = path.resolve(`./live/${curLive.subTitle}(${curLive.startTime})(${i++}).flv`);
+    }
+    console.log(`开始录制直播，当前直播地址：${livePath},输出路径：${liveOutName}`);
+    const ffmpeg = exec('/usr/local/bin/ffmpeg', [
       '-i',
       livePath,
       '-c:v',
@@ -40,5 +46,7 @@ axios({
     process.stdin.pipe(ffmpeg.stdin);
     ffmpeg.stdout.pipe(process.stdout);
     ffmpeg.stderr.pipe(process.stdout);
+  } else {
+    console.log('直播不存在');
   }
 });

@@ -17,6 +17,6 @@ axios({
     os: 'ios',
   },
 }).then(res => {
-  console.log(res.data.content.reviewList[2].streamPath);
+  console.log(res.data.content.liveList);
   console.dir(res.data.content.reviewList[2]);
 });
