@@ -28,24 +28,27 @@ axios({
   })[0];
   const livePath = (curLive && curLive.streamPath) || '';
   if (livePath) {
-    let liveOutName = path.resolve(`./live/${curLive.subTitle}(${curLive.startTime}).flv`);
+    let liveOutName = path.resolve(
+      `./live/${curLive.subTitle}(${curLive.startTime}).flv`
+    );
     let i = 1;
     while (fs.existsSync(liveOutName)) {
-      liveOutName = path.resolve(`./live/${curLive.subTitle}(${curLive.startTime})(${i++}).flv`);
+      liveOutName = path.resolve(
+        `./live/${curLive.subTitle}(${curLive.startTime})(${i++}).flv`
+      );
     }
-    console.log(`开始录制直播，当前直播地址：${livePath},输出路径：${liveOutName}`);
-    const ffmpeg = exec('/usr/local/bin/ffmpeg', [
-      '-i',
-      livePath,
-      '-c:v',
-      'copy',
-      '-c:a',
-      'copy',
-      liveOutName,
-    ]);
-    process.stdin.pipe(ffmpeg.stdin);
-    ffmpeg.stdout.pipe(process.stdout);
-    ffmpeg.stderr.pipe(process.stdout);
+    try {
+      console.log(`开始录制直播，当前直播地址：${livePath},输出路径：${liveOutName}`);
+      const ffmpeg = exec(
+        process.platform === 'win32' ? 'ffmpeg.exe' : '/usr/local/bin/ffmpeg',
+        [ '-i', livePath, '-c:v', 'copy', '-c:a', 'copy', liveOutName ]
+      );
+      process.stdin.pipe(ffmpeg.stdin);
+      ffmpeg.stdout.pipe(process.stdout);
+      ffmpeg.stderr.pipe(process.stdout);
+    } catch (error) {
+      console.log(error);
+    }
   } else {
     console.log('直播不存在');
   }
