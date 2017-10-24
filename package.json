@@ -9,7 +9,8 @@
     "egg-schedule": "^2.4.1",
     "egg-scripts": "^1.2.0",
     "egg-socket.io": "^2.1.0",
-    "egg-view-ejs": "^1.1.0"
+    "egg-view-ejs": "^1.1.0",
+    "unused-filename": "^1.0.0"
   },
   "devDependencies": {
     "autod": "^2.9.0",

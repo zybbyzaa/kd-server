@@ -5,6 +5,7 @@ const memberId = 417317;
 const exec = require('child_process').spawn;
 const fs = require('fs');
 const path = require('path');
+const unusedFilename = require('unused-filename');
 
 axios({
   method: 'POST',
@@ -31,12 +32,13 @@ axios({
     let liveOutName = path.resolve(
       `./live/${curLive.subTitle}(${curLive.startTime}).flv`
     );
-    let i = 1;
-    while (fs.existsSync(liveOutName)) {
-      liveOutName = path.resolve(
-        `./live/${curLive.subTitle}(${curLive.startTime})(${i++}).flv`
-      );
-    }
+    liveOutName = unusedFilename.sync(liveOutName);
+    // let i = 1;
+    // while (fs.existsSync(liveOutName)) {
+    //   liveOutName = path.resolve(
+    //     `./live/${curLive.subTitle}(${curLive.startTime})(${i++}).flv`
+    //   );
+    // }
     try {
       console.log(`开始录制直播，当前直播地址：${livePath},输出路径：${liveOutName}`);
       const ffmpeg = exec(
